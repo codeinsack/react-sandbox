@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": 0.1014984380554238,
+      "title": "Learn Validation Hehe",
+      "isCompleted": true,
+      "description": "Some description is here...",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 0.7735145388516254,
+      "title": "Learn Svelte",
+      "isCompleted": false
+    },
+    {
+      "id": 0.04481484609969111,
+      "title": "Learn Angular",
+      "isCompleted": false,
+      "description": "123"
+    },
+    {
+      "id": 0.17339240066740547,
+      "title": "Learn Redux",
+      "isCompleted": true
+    },
+    {
+      "id": 0.09065927063965895,
+      "title": "Learn Zustand",
+      "isCompleted": false
+    }
+  ]
+}
