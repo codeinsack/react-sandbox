@@ -2,7 +2,14 @@ import React from "react";
 import { Tab, Tabs } from "@mui/material";
 import { NavLink, useLocation } from "react-router-dom";
 
-const validPaths = ["/", "/use-transition", "/use-memo", "/users", "/testing"];
+const validPaths = [
+  "/",
+  "/use-transition",
+  "/use-memo",
+  "/users",
+  "/testing",
+  "example-1",
+];
 
 const NavBar = () => {
   const { pathname } = useLocation();

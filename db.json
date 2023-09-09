@@ -28,5 +28,19 @@
       "title": "Learn Zustand",
       "isCompleted": false
     }
+  ],
+  "users": [
+    {
+      "id": 0.7735145388516254,
+      "name": "Jane",
+      "age": 19,
+      "married": false
+    },
+    {
+      "id": 0.04481484609969111,
+      "name": "Mary",
+      "age": 27,
+      "married": true
+    }
   ]
 }

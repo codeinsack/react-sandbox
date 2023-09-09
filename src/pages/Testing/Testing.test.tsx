@@ -1,108 +1,139 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import Testing from "./Testing";
+import { createServer } from "../../test/server";
+import { useStore } from "../../store";
 
-function createUser(name: string, age: string) {
-  const $name = screen.getByRole("textbox", {
+// Button = btn
+// TextField = tf
+
+const createUser = (name: string, age: string) => {
+  const $nameTf = screen.getByRole("textbox", {
     name: /name/i,
   });
-  const $age = screen.getByRole("textbox", {
+  const $ageTf = screen.getByRole("textbox", {
     name: /age/i,
   });
-  const $married = screen.getByRole("checkbox", {
+  const $marriedTf = screen.getByRole("checkbox", {
     name: /married/i,
   });
-
-  userEvent.click($name);
-  act(() => {
-    userEvent.keyboard(name);
-  });
-
-  userEvent.click($age);
-  act(() => {
-    userEvent.keyboard(age);
-  });
-
-  act(() => {
-    userEvent.click($married);
-  });
-
   const $submitButton = screen.getByRole("button");
 
-  act(() => {
+  userEvent.type($nameTf, name);
+  userEvent.type($ageTf, age);
+  userEvent.click($marriedTf);
+  userEvent.click($submitButton);
+
+  return { $nameTf, $ageTf, $marriedTf };
+};
+
+const renderComponent = async () => {
+  await waitFor(() => {
+    render(<Testing />);
+  });
+};
+
+describe("with initial data from the server", () => {
+  createServer([
+    {
+      method: "get",
+      path: "/users",
+      res: () => {
+        return [
+          {
+            id: 0.7735145388516254,
+            name: "Jane",
+            age: 19,
+            married: false,
+          },
+          {
+            id: 0.04481484609969111,
+            name: "Mary",
+            age: 27,
+            married: true,
+          },
+        ];
+      },
+    },
+  ]);
+
+  test("should display 2 users after component is rendered", async () => {
+    await renderComponent();
+
+    const $listItems = await screen.findAllByRole("listitem");
+
+    expect($listItems).toHaveLength(2);
+  });
+});
+
+describe("without initial data from the server", () => {
+  createServer([
+    {
+      method: "get",
+      path: "/users",
+      res: () => {
+        return [];
+      },
+    },
+  ]);
+
+  beforeEach(() => {
+    useStore.getState().users = [];
+  });
+
+  test("should display a user when prefilled form is submitted", async () => {
+    await renderComponent();
+
+    createUser("Jane", "27");
+
+    const $listItem = await screen.findByRole("listitem");
+
+    expect($listItem).toBeInTheDocument();
+    expect($listItem).toHaveTextContent(/jane/i);
+  });
+
+  test("after form is submitted user fields should be cleared", async () => {
+    await renderComponent();
+
+    const { $marriedTf, $ageTf, $nameTf } = createUser("Jane", "27");
+
+    await screen.findByRole("listitem");
+
+    expect($nameTf).toHaveTextContent("");
+    expect($ageTf).toHaveTextContent("");
+    expect($marriedTf).not.toBeChecked();
+  });
+
+  test("after form is submitted 3 times 3 users should be displayed", async () => {
+    await renderComponent();
+
+    await waitFor(() => {
+      createUser("Jane", "27");
+    });
+    await waitFor(() => {
+      createUser("Alex", "40");
+    });
+    await waitFor(() => {
+      createUser("Mary", "17");
+    });
+
+    const $listItems = await screen.findAllByRole("listitem");
+
+    expect($listItems).toHaveLength(3);
+  });
+
+  test("should show errors when required fields are not filled", async () => {
+    await renderComponent();
+
+    const $submitButton = screen.getByRole("button");
+
     userEvent.click($submitButton);
+
+    const $ageValidationError = await screen.findByText(/age is required/i);
+    const $nameValidationError = await screen.findByText(/name is required/i);
+
+    expect($ageValidationError).toBeInTheDocument();
+    expect($nameValidationError).toBeInTheDocument();
   });
-}
-
-test("should display text Hello World", () => {
-  // render component
-  render(<Testing />);
-
-  // find element using query
-  const $link = screen.getByRole("link");
-
-  // assertion
-  expect($link).toHaveTextContent(/hello world/i);
-});
-
-test("should display inputs: name, age, married", () => {
-  render(<Testing />);
-
-  const $name = screen.getByRole("textbox", {
-    name: /name/i,
-  });
-  const $age = screen.getByRole("textbox", {
-    name: /age/i,
-  });
-  const $married = screen.getByRole("checkbox", {
-    name: /married/i,
-  });
-
-  expect($name).toBeInTheDocument();
-  expect($age).toBeInTheDocument();
-  expect($married).toBeInTheDocument();
-});
-
-test("should display a user when prefilled form is submitted", () => {
-  render(<Testing />);
-
-  createUser("Jane", "27");
-
-  const $listItem = screen.getByRole("listitem");
-
-  expect($listItem).toBeInTheDocument();
-  expect($listItem).toHaveTextContent(/jane/i);
-});
-
-test("should display 3 users when prefilled form is submitted 3 times", () => {
-  render(<Testing />);
-
-  createUser("Jane", "27");
-  createUser("Alex", "30");
-  createUser("Martin", "16");
-
-  const $listItems = screen.getAllByRole("listitem");
-
-  expect($listItems).toHaveLength(3);
-});
-
-test("after form is submitted user fields should be cleared", () => {
-  render(<Testing />);
-
-  const $name = screen.getByRole("textbox", {
-    name: /name/i,
-  });
-  const $age = screen.getByRole("textbox", {
-    name: /age/i,
-  });
-  const $married = screen.getByRole("checkbox", {
-    name: /married/i,
-  });
-
-  createUser("Jane", "27");
-
-  expect($name).toHaveTextContent("");
-  expect($age).toHaveTextContent("");
-  expect($married).not.toBeChecked();
 });

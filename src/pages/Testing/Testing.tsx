@@ -1,4 +1,13 @@
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  TextField,
+} from "@mui/material";
+import { Controller, useForm } from "react-hook-form";
+import { useStore } from "../../store";
+import { useEffect } from "react";
 
 interface User {
   id: number;
@@ -7,74 +16,60 @@ interface User {
   married: boolean;
 }
 
-const initialUser: User = {
-  id: 0,
-  name: "",
-  age: 0,
-  married: false,
-};
-
 const Testing = () => {
-  const [user, setUser] = useState<User>(initialUser);
-  const [users, setUsers] = useState<User[]>([]);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+    reset,
+  } = useForm<User>();
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setUsers([...users, { ...user, id: Math.random() }]);
-    setUser(initialUser);
-  };
+  const { users, addUser, fetchUsers } = useStore();
 
-  const onNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setUser({
-      ...user,
-      name: value,
-    });
-  };
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
-  const onAgeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setUser({
-      ...user,
-      age: Number.parseInt(value),
-    });
-  };
-
-  const onMarriedChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = event.target;
-    setUser({
-      ...user,
-      married: checked,
-    });
+  const onSubmit = (user: User) => {
+    addUser(user.name, user.age, user.married);
+    reset();
   };
 
   return (
     <div>
-      <a href="#">Hello World</a>
-      <form onSubmit={onSubmit}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            value={user.name}
-            id="name"
-            type="text"
-            onChange={onNameChange}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack spacing={1}>
+          <TextField
+            {...register("name", { required: "Name is required" })}
+            helperText={errors.name?.message}
+            error={!!errors.name}
+            label="Name"
+            size="small"
+            variant="outlined"
           />
-        </div>
-        <div>
-          <label htmlFor="age">Age</label>
-          <input value={user.age} id="age" type="text" onChange={onAgeChange} />
-        </div>
-        <div>
-          <label htmlFor="married">Married</label>
-          <input
-            checked={user.married}
-            id="married"
-            type="checkbox"
-            onChange={onMarriedChange}
+          <TextField
+            {...register("age", { required: "Age is required" })}
+            helperText={errors.age?.message}
+            error={!!errors.age}
+            label="Age"
+            variant="outlined"
+            size="small"
           />
-        </div>
-        <button>Submit</button>
+          <FormControlLabel
+            control={
+              <Controller
+                name="married"
+                control={control}
+                render={({ field: { value, ...field } }) => (
+                  <Checkbox {...field} checked={!!value} />
+                )}
+              />
+            }
+            label="Married"
+          />
+          <Button type="submit">Submit</Button>
+        </Stack>
       </form>
       <ul>
         {users.map((user) => (
